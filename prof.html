@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Professor - FocoEnsino</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Biblioteca para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4bb543;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --robotics: #2d3748;
+            --reinforcement: #48bb78;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo span {
+            font-weight: 300;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 40px 0;
+            text-align: center;
+            background: linear-gradient(rgba(67, 97, 238, 0.05), rgba(67, 97, 238, 0.05));
+        }
+
+        .hero h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            color: #555;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 20px auto 0;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 50px;
+            border: 2px solid #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.3);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+
+        /* Filter Section */
+        .filters-container {
+            margin: 30px 0;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: white;
+            border: 2px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-btn.robotics.active {
+            background-color: var(--robotics);
+            border-color: var(--robotics);
+        }
+
+        .filter-btn.reinforcement.active {
+            background-color: var(--reinforcement);
+            border-color: var(--reinforcement);
+        }
+
+        /* Student Grid */
+        .section-title {
+            text-align: center;
+            margin: 40px 0 30px;
+            color: var(--secondary);
+            font-size: 1.8rem;
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .student-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            transform: translateY(0);
+        }
+
+        .student-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .student-img {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+        }
+
+        .student-info {
+            padding: 20px;
+        }
+
+        .student-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+
+        .student-info p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .student-projects {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .projects-count {
+            background-color: var(--accent);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .view-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-btn:hover {
+            background-color: var(--secondary);
+        }
+
+        .pedagogical-btn {
+            position: absolute;
+            top: 10px;
+            right: 50px;
+            background-color: var(--warning);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .delete-student-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .student-card:hover .pedagogical-btn,
+        .student-card:hover .delete-student-btn {
+            opacity: 1;
+        }
+
+        .pedagogical-btn:hover {
+            background-color: #e0a800;
+        }
+
+        .delete-student-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Pedagogical Record Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 30px auto;
+            width: 95%;
+            max-width: 1200px;
+            border-radius: var(--radius);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            animation: modalOpen 0.4s ease;
+        }
+
+        @keyframes modalOpen {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: var(--secondary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--dark);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* Student Info Section */
+        .student-info-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 25px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: var(--secondary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-item input,
+        .info-item select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Dias da Semana */
+        .dias-semana {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .dia-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Activities Table */
+        .activities-section h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .activities-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .activities-table th,
+        .activities-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activities-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .activities-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .activities-table input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .delete-activity-btn {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .delete-activity-btn:hover {
+            background-color: #c82333;
+        }
+
+        .add-activity-btn {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .add-activity-btn:hover {
+            background-color: #3a9c35;
+        }
+
+        .save-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .save-btn:hover {
+            background-color: var(--secondary);
+        }
+
+        .pdf-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pdf-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .left-buttons, .right-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .modal-content {
+                width: 98%;
+                margin: 15px auto;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .filter-btn {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .activities-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .left-buttons, .right-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <h1>Foco<span>Ensino</span> <small>| Professor</small></h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span>Professor</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Painel do Professor</h2>
+            <p>Acompanhe o desempenho pedagógico dos alunos e gerencie suas atividades</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar aluno...">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="container filters-container">
+        <div class="filter-group">
+            <h3>Selecione o Curso</h3>
+            <div class="filters" id="courseFilters">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn robotics" data-filter="robotics">Robótica</button>
+                <button class="filter-btn reinforcement" data-filter="reinforcement">Reforço</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <h3>Selecione o Período</h3>
+            <div class="filters" id="periodFilters">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="segunda">Segunda</button>
+                <button class="filter-btn" data-filter="terca">Terça</button>
+                <button class="filter-btn" data-filter="quarta">Quarta</button>
+                <button class="filter-btn" data-filter="quinta">Quinta</button>
+                <button class="filter-btn" data-filter="sexta">Sexta</button>
+                <button class="filter-btn" data-filter="sabado">Sábado</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Students Section -->
+    <section class="container">
+        <h2 class="section-title">Meus Alunos</h2>
+        <div class="students-grid" id="studentsGrid">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Carregando alunos...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pedagogical Record Modal -->
+    <div class="modal" id="pedagogicalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Ficha Pedagógica</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="student-info-section">
+                    <div class="info-row">
+                        <div class="info-item">
+                            <label for="studentName">Aluno</label>
+                            <input type="text" id="studentName" readonly>
+                        </div>
+                        <div class="info-item">
+                            <label for="studentRD">R.D. (Resultado Diagnóstico)</label>
+                            <input type="text" id="studentRD">
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-item">
+                            <label>Disciplinas</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="alfabetizacao" name="disciplinas">
+                                    <label for="alfabetizacao">Alfabetização</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="portugues" name="disciplinas">
+                                    <label for="portugues">Português</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="matematica" name="disciplinas">
+                                    <label for="matematica">Matemática</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="etec_if" name="disciplinas">
+                                    <label for="etec_if">Etec/IF</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="redacao" name="disciplinas">
+                                    <label for="redacao">Redação</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="enem" name="disciplinas">
+                                    <label for="enem">ENEM</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-item">
+                            <label>Dias das Aulas</label>
+                            <div class="dias-semana">
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="segunda" value="Segunda">
+                                    <label for="segunda">Segunda</label>
+                                </div>
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="terca" value="Terça">
+                                    <label for="terca">Terça</label>
+                                </div>
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="quarta" value="Quarta">
+                                    <label for="quarta">Quarta</label>
+                                </div>
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="quinta" value="Quinta">
+                                    <label for="quinta">Quinta</label>
+                                </div>
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="sexta" value="Sexta">
+                                    <label for="sexta">Sexta</label>
+                                </div>
+                                <div class="dia-checkbox">
+                                    <input type="checkbox" id="sabado" value="Sábado">
+                                    <label for="sabado">Sábado</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <label for="horarioAulas">Horário</label>
+                            <input type="text" id="horarioAulas" placeholder="Ex: 14:00 às 16:00">
+                        </div>
+                        <div class="info-item">
+                            <label for="inicioAulas">Início das Aulas</label>
+                            <input type="date" id="inicioAulas">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activities-section">
+                    <h3>Registro de Atividades</h3>
+                    <button class="add-activity-btn" id="addActivityBtn">
+                        <i class="fas fa-plus"></i> Adicionar Atividade
+                    </button>
+                    
+                    <table class="activities-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Atividades Realizadas</th>
+                                <th>L.C.F.</th>
+                                <th>L.C.E.</th>
+                                <th>Observações</th>
+                                <th>Prof.</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activitiesTableBody">
+                            <!-- Linhas serão adicionadas dinamicamente -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="action-buttons">
+                        <div class="left-buttons">
+                            <button class="pdf-btn" id="generatePdfBtn">
+                                <i class="fas fa-file-pdf"></i> Gerar PDF
+                            </button>
+                        </div>
+                        <div class="right-buttons">
+                            <button class="save-btn" id="savePedagogicalBtn">
+                                <i class="fas fa-save"></i> Salvar Ficha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgPGloxeQrjwVfXPYWk8YYnnHbOdeVkFY",
+            authDomain: "plataforma-nova-87039.firebaseapp.com",
+            databaseURL: "https://plataforma-nova-87039-default-rtdb.firebaseio.com",
+            projectId: "plataforma-nova-87039",
+            storageBucket: "plataforma-nova-87039.firebasestorage.app",
+            messagingSenderId: "516370878767",
+            appId: "1:516370878767:web:71bb891110d813394391da"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Elementos DOM
+        const studentsGrid = document.getElementById('studentsGrid');
+        const pedagogicalModal = document.getElementById('pedagogicalModal');
+        const closeModal = document.getElementById('closeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const searchInput = document.getElementById('searchInput');
+        const courseFilterButtons = document.querySelectorAll('#courseFilters .filter-btn');
+        const periodFilterButtons = document.querySelectorAll('#periodFilters .filter-btn');
+        
+        // Elementos da ficha pedagógica
+        const studentName = document.getElementById('studentName');
+        const studentRD = document.getElementById('studentRD');
+        const horarioAulas = document.getElementById('horarioAulas');
+        const inicioAulas = document.getElementById('inicioAulas');
+        const addActivityBtn = document.getElementById('addActivityBtn');
+        const activitiesTableBody = document.getElementById('activitiesTableBody');
+        const savePedagogicalBtn = document.getElementById('savePedagogicalBtn');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+
+        // Estado da aplicação
+        let students = {};
+        let currentCourseFilter = 'all';
+        let currentPeriodFilter = 'all';
+        let currentStudentId = null;
+        let debounceTimer;
+
+        // Carregar dados do Firebase
+        function loadStudents() {
+            const studentsRef = ref(database, 'students');
+
+            onValue(studentsRef, (snapshot) => {
+                students = snapshot.val() || {};
+                renderStudents();
+            });
+        }
+
+        // Filtrar e renderizar alunos
+        function renderStudents() {
+            studentsGrid.innerHTML = '';
+
+            if (Object.keys(students).length === 0) {
+                studentsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-graduate"></i>
+                        <h3>Nenhum aluno cadastrado</h3>
+                        <p>Os alunos serão exibidos aqui quando cadastrados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let hasVisibleStudents = false;
+
+            Object.keys(students).forEach(studentId => {
+                const student = students[studentId];
+                const projectsCount = student.projects ? student.projects.length : 0;
+
+                // Aplicar filtros de curso
+                if (currentCourseFilter !== 'all' && student.course !== currentCourseFilter) {
+                    return;
+                }
+
+                // Aplicar filtros de período
+                if (currentPeriodFilter !== 'all' && student.period !== currentPeriodFilter) {
+                    return;
+                }
+
+                // Aplicar busca
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm && !student.name.toLowerCase().includes(searchTerm)) {
+                    return;
+                }
+
+                hasVisibleStudents = true;
+
+                // Determinar a cor baseada no curso
+                let cardColor = '#4361ee';
+                if (student.course === 'robotics') {
+                    cardColor = '#2d3748';
+                } else if (student.course === 'reinforcement') {
+                    cardColor = '#48bb78';
+                }
+
+                const studentCard = document.createElement('div');
+                studentCard.className = 'student-card';
+                studentCard.innerHTML = `
+                    <div class="student-img" style="background-color: ${cardColor};">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <button class="pedagogical-btn" data-id="${studentId}" aria-label="Abrir ficha pedagógica">
+                        <i class="fas fa-clipboard-list"></i>
+                    </button>
+                    <button class="delete-student-btn" data-id="${studentId}" aria-label="Excluir aluno">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="student-info">
+                        <h3>${student.name}</h3>
+                        <p>${student.grade} - ${student.period}</p>
+                        <div class="student-projects">
+                            <span class="projects-count">${projectsCount} projeto(s)</span>
+                            <button class="view-btn" data-id="${studentId}">Ver Projetos</button>
+                        </div>
+                    </div>
+                `;
+
+                studentsGrid.appendChild(studentCard);
+            });
+
+            if (!hasVisibleStudents) {
+                studentsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>Nenhum aluno encontrado</h3>
+                        <p>Tente ajustar os filtros ou termos de busca.</p>
+                    </div>
+                `;
+            } else {
+                // Adicionar event listeners aos botões de ficha pedagógica
+                document.querySelectorAll('.pedagogical-btn').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const studentId = this.getAttribute('data-id');
+                        openPedagogicalRecord(studentId);
+                    });
+                });
+
+                // Adicionar event listeners aos botões de exclusão
+                document.querySelectorAll('.delete-student-btn').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const studentId = this.getAttribute('data-id');
+                        deleteStudent(studentId);
+                    });
+                });
+            }
+        }
+
+        // Abrir ficha pedagógica do aluno
+        function openPedagogicalRecord(studentId) {
+            const student = students[studentId];
+            currentStudentId = studentId;
+
+            if (student) {
+                modalTitle.textContent = `Ficha Pedagógica - ${student.name}`;
+                studentName.value = student.name;
+                
+                // Carregar dados da ficha pedagógica se existirem
+                loadPedagogicalData(studentId);
+                
+                pedagogicalModal.style.display = 'block';
+            }
+        }
+
+        // Carregar dados pedagógicos do Firebase
+        function loadPedagogicalData(studentId) {
+            const pedagogicalRef = ref(database, `pedagogical/${studentId}`);
+            
+            onValue(pedagogicalRef, (snapshot) => {
+                const data = snapshot.val();
+                
+                if (data) {
+                    // Preencher campos básicos
+                    studentRD.value = data.rd || '';
+                    horarioAulas.value = data.horarioAulas || '';
+                    inicioAulas.value = data.inicioAulas || '';
+                    
+                    // Preencher checkboxes de disciplinas
+                    const disciplinas = data.disciplinas || {};
+                    document.getElementById('alfabetizacao').checked = disciplinas.alfabetizacao || false;
+                    document.getElementById('portugues').checked = disciplinas.portugues || false;
+                    document.getElementById('matematica').checked = disciplinas.matematica || false;
+                    document.getElementById('etec_if').checked = disciplinas.etec_if || false;
+                    document.getElementById('redacao').checked = disciplinas.redacao || false;
+                    document.getElementById('enem').checked = disciplinas.enem || false;
+                    
+                    // Preencher dias da semana
+                    const diasAulas = data.diasAulas || [];
+                    document.querySelectorAll('.dias-semana input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = diasAulas.includes(checkbox.value);
+                    });
+                    
+                    // Preencher tabela de atividades
+                    renderActivitiesTable(data.atividades || []);
+                } else {
+                    // Limpar campos se não houver dados
+                    clearPedagogicalForm();
+                }
+            });
+        }
+
+        // Renderizar tabela de atividades
+        function renderActivitiesTable(atividades) {
+            activitiesTableBody.innerHTML = '';
+            
+            if (atividades.length === 0) {
+                // Adicionar uma linha vazia se não houver atividades
+                addActivityRow();
+                return;
+            }
+            
+            atividades.forEach((atividade, index) => {
+                addActivityRow(atividade, index);
+            });
+        }
+
+        // Adicionar linha na tabela de atividades
+        function addActivityRow(atividade = {}, index = null) {
+            const row = document.createElement('tr');
+            const rowIndex = index !== null ? index : activitiesTableBody.children.length;
+            
+            row.innerHTML = `
+                <td><input type="date" value="${atividade.data || ''}" class="activity-date"></td>
+                <td><input type="text" value="${atividade.atividade || ''}" class="activity-desc" placeholder="Descreva a atividade"></td>
+                <td><input type="text" value="${atividade.lcf || ''}" class="activity-lcf" placeholder="L.C.F."></td>
+                <td><input type="text" value="${atividade.lce || ''}" class="activity-lce" placeholder="L.C.E."></td>
+                <td><input type="text" value="${atividade.observacoes || ''}" class="activity-obs" placeholder="Observações"></td>
+                <td><input type="text" value="${atividade.professor || ''}" class="activity-prof" placeholder="Prof."></td>
+                <td><button type="button" class="delete-activity-btn" data-index="${rowIndex}"><i class="fas fa-times"></i></button></td>
+            `;
+            
+            activitiesTableBody.appendChild(row);
+            
+            // Adicionar event listener para o botão de excluir
+            const deleteBtn = row.querySelector('.delete-activity-btn');
+            deleteBtn.addEventListener('click', function() {
+                if (activitiesTableBody.children.length > 1) {
+                    row.remove();
+                } else {
+                    // Se for a última linha, apenas limpa os campos
+                    row.querySelectorAll('input').forEach(input => {
+                        input.value = '';
+                    });
+                }
+            });
+        }
+
+        // Limpar formulário pedagógico
+        function clearPedagogicalForm() {
+            studentRD.value = '';
+            horarioAulas.value = '';
+            inicioAulas.value = '';
+            
+            // Desmarcar todas as disciplinas
+            document.querySelectorAll('input[name="disciplinas"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Desmarcar todos os dias da semana
+            document.querySelectorAll('.dias-semana input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Limpar tabela de atividades
+            activitiesTableBody.innerHTML = '';
+            addActivityRow();
+        }
+
+        // Salvar ficha pedagógica
+        function savePedagogicalData() {
+            if (!currentStudentId) return;
+            
+            // Coletar dados do formulário
+            const disciplinas = {
+                alfabetizacao: document.getElementById('alfabetizacao').checked,
+                portugues: document.getElementById('portugues').checked,
+                matematica: document.getElementById('matematica').checked,
+                etec_if: document.getElementById('etec_if').checked,
+                redacao: document.getElementById('redacao').checked,
+                enem: document.getElementById('enem').checked
+            };
+            
+            // Coletar dias da semana selecionados
+            const diasAulas = [];
+            document.querySelectorAll('.dias-semana input[type="checkbox"]:checked').forEach(checkbox => {
+                diasAulas.push(checkbox.value);
+            });
+            
+            // Coletar atividades da tabela
+            const atividades = [];
+            const rows = activitiesTableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const data = row.querySelector('.activity-date').value;
+                const atividade = row.querySelector('.activity-desc').value;
+                const lcf = row.querySelector('.activity-lcf').value;
+                const lce = row.querySelector('.activity-lce').value;
+                const observacoes = row.querySelector('.activity-obs').value;
+                const professor = row.querySelector('.activity-prof').value;
+                
+                // Só adicionar se pelo menos um campo estiver preenchido
+                if (data || atividade || lcf || lce || observacoes || professor) {
+                    atividades.push({
+                        data,
+                        atividade,
+                        lcf,
+                        lce,
+                        observacoes,
+                        professor
+                    });
+                }
+            });
+            
+            // Preparar dados para salvar
+            const pedagogicalData = {
+                rd: studentRD.value,
+                disciplinas,
+                diasAulas,
+                horarioAulas: horarioAulas.value,
+                inicioAulas: inicioAulas.value,
+                atividades,
+                ultimaAtualizacao: new Date().toISOString()
+            };
+            
+            // Salvar no Firebase
+            const pedagogicalRef = ref(database, `pedagogical/${currentStudentId}`);
+            set(pedagogicalRef, pedagogicalData)
+                .then(() => {
+                    alert('Ficha pedagógica salva com sucesso!');
+                })
+                .catch((error) => {
+                    alert('Erro ao salvar ficha pedagógica: ' + error.message);
+                });
+        }
+
+        // Gerar PDF da ficha pedagógica
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const student = students[currentStudentId];
+            if (!student) return;
+            
+            // Configurações do PDF
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('FICHA PEDAGÓGICA', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Aluno: ${student.name}`, 20, 35);
+            doc.text(`Série: ${student.grade}`, 20, 45);
+            doc.text(`Período: ${student.period}`, 20, 55);
+            doc.text(`R.D.: ${studentRD.value}`, 20, 65);
+            
+            // Dias das aulas
+            const diasSelecionados = [];
+            document.querySelectorAll('.dias-semana input[type="checkbox"]:checked').forEach(checkbox => {
+                diasSelecionados.push(checkbox.value);
+            });
+            doc.text(`Dias das Aulas: ${diasSelecionados.join(', ')}`, 20, 75);
+            doc.text(`Horário: ${horarioAulas.value}`, 20, 85);
+            doc.text(`Início: ${inicioAulas.value}`, 20, 95);
+            
+            // Disciplinas
+            const disciplinasSelecionadas = [];
+            if (document.getElementById('alfabetizacao').checked) disciplinasSelecionadas.push('Alfabetização');
+            if (document.getElementById('portugues').checked) disciplinasSelecionadas.push('Português');
+            if (document.getElementById('matematica').checked) disciplinasSelecionadas.push('Matemática');
+            if (document.getElementById('etec_if').checked) disciplinasSelecionadas.push('Etec/IF');
+            if (document.getElementById('redacao').checked) disciplinasSelecionadas.push('Redação');
+            if (document.getElementById('enem').checked) disciplinasSelecionadas.push('ENEM');
+            
+            doc.text(`Disciplinas: ${disciplinasSelecionadas.join(', ')}`, 20, 105);
+            
+            // Tabela de atividades
+            let yPosition = 125;
+            doc.setFont(undefined, 'bold');
+            doc.text('REGISTRO DE ATIVIDADES', 20, yPosition);
+            yPosition += 10;
+            
+            // Cabeçalho da tabela
+            doc.setFontSize(10);
+            doc.text('Data', 20, yPosition);
+            doc.text('Atividade', 45, yPosition);
+            doc.text('L.C.F.', 120, yPosition);
+            doc.text('L.C.E.', 140, yPosition);
+            doc.text('Obs.', 160, yPosition);
+            doc.text('Prof.', 180, yPosition);
+            
+            yPosition += 5;
+            doc.line(20, yPosition, 190, yPosition);
+            yPosition += 10;
+            
+            // Conteúdo da tabela
+            doc.setFont(undefined, 'normal');
+            const rows = activitiesTableBody.querySelectorAll('tr');
+            let hasActivities = false;
+            
+            rows.forEach(row => {
+                const data = row.querySelector('.activity-date').value;
+                const atividade = row.querySelector('.activity-desc').value;
+                const lcf = row.querySelector('.activity-lcf').value;
+                const lce = row.querySelector('.activity-lce').value;
+                const observacoes = row.querySelector('.activity-obs').value;
+                const professor = row.querySelector('.activity-prof').value;
+                
+                if (data || atividade) {
+                    hasActivities = true;
+                    
+                    // Quebra de linha para atividades longas
+                    const atividadeLines = doc.splitTextToSize(atividade || '', 60);
+                    const obsLines = doc.splitTextToSize(observacoes || '', 15);
+                    
+                    const lineHeight = Math.max(atividadeLines.length, obsLines.length) * 5;
+                    
+                    doc.text(data || '', 20, yPosition);
+                    doc.text(atividadeLines, 45, yPosition);
+                    doc.text(lcf || '', 120, yPosition);
+                    doc.text(lce || '', 140, yPosition);
+                    doc.text(obsLines, 160, yPosition);
+                    doc.text(professor || '', 180, yPosition);
+                    
+                    yPosition += lineHeight;
+                    
+                    // Quebra de página se necessário
+                    if (yPosition > 270) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                }
+            });
+            
+            if (!hasActivities) {
+                doc.text('Nenhuma atividade registrada', 20, yPosition);
+            }
+            
+            // Data de geração
+            doc.setFontSize(8);
+            doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 280);
+            
+            // Salvar PDF
+            doc.save(`ficha_pedagogica_${student.name.replace(/\s+/g, '_')}.pdf`);
+        }
+
+        // Excluir aluno
+        function deleteStudent(studentId) {
+            if (confirm('Tem certeza que deseja excluir este aluno e todos os seus dados?')) {
+                const studentRef = ref(database, 'students/' + studentId);
+                const pedagogicalRef = ref(database, `pedagogical/${studentId}`);
+                
+                // Excluir aluno e dados pedagógicos
+                Promise.all([
+                    remove(studentRef),
+                    remove(pedagogicalRef)
+                ])
+                .then(() => {
+                    alert('Aluno excluído com sucesso!');
+                    loadStudents();
+                })
+                .catch((error) => {
+                    alert('Erro ao excluir aluno: ' + error.message);
+                });
+            }
+        }
+
+        // Fechar modal
+        closeModal.addEventListener('click', function () {
+            pedagogicalModal.style.display = 'none';
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function (event) {
+            if (event.target === pedagogicalModal) {
+                pedagogicalModal.style.display = 'none';
+            }
+        });
+
+        // Configurar filtros de curso
+        courseFilterButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                courseFilterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                currentCourseFilter = this.getAttribute('data-filter');
+                renderStudents();
+            });
+        });
+
+        // Configurar filtros de período
+        periodFilterButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                periodFilterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                currentPeriodFilter = this.getAttribute('data-filter');
+                renderStudents();
+            });
+        });
+
+        // Configurar busca com debounce
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(renderStudents, 300);
+        });
+
+        // Adicionar nova atividade
+        addActivityBtn.addEventListener('click', function () {
+            addActivityRow();
+        });
+
+        // Salvar ficha pedagógica
+        savePedagogicalBtn.addEventListener('click', function () {
+            savePedagogicalData();
+        });
+
+        // Gerar PDF
+        generatePdfBtn.addEventListener('click', function () {
+            generatePDF();
+        });
+
+        // Inicializar a página
+        document.addEventListener('DOMContentLoaded', function () {
+            loadStudents();
+        });
+    </script>
+</body>
+</html>
